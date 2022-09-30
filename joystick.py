@@ -26,19 +26,24 @@ class TextPrint:
     def unindent(self):
         self.x -= 10
 
-def send_command(msg):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    tello_address = ('192.168.10.1', 8889)
+class Tello:
+    def __init__(self, address='192.168.10.1', port=8889):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.tello_address = (address, port)
 
-    msg = msg.encode(encoding='utf-8')
-    print(msg)
-    sock.sendto(msg, tello_address)
+    def send_command(self, msg):
+        msg = msg.encode(encoding='ascii')
+        print(msg)
+        self.sock.sendto(msg, self.tello_address)
 
 def main():
     ############################################################################
-    axis_order = [0, 1, 3, 2]
-    last_rc = ['0', '0', '0', '0']
-    send_command('command')
+    last_rc = [0, 0, 0, 0]
+    tello = Tello()
+    tello.send_command('command')
+    tello.send_command('speed 10')
+    tello.send_command('streamoff')
+    tello.send_command('streamon')
     ############################################################################
 
     # Set the width and height of the screen (width, height), and name the window.
@@ -69,14 +74,14 @@ def main():
                 print("Joystick button pressed.")
                 print(event)
                 if event.button == 0:
-                    send_command('takeoff')
+                    tello.send_command('takeoff')
                     # joystick = joysticks[event.instance_id]
                     # if joystick.rumble(0, 0.7, 500):
                     #     print(f"Rumble effect played on joystick {event.instance_id}")
                 if event.button == 1:
-                    send_command('land')
+                    tello.send_command('land')
                 elif event.button >= 6 and event.button <= 11:
-                    send_command('speed ' + str(10 + (event.button - 6) * 18))
+                    tello.send_command('speed ' + str(10 + (event.button - 6) * 18))
 
             if event.type == pygame.JOYBUTTONUP:
                 print("Joystick button released.")
@@ -156,16 +161,15 @@ def main():
             text_print.unindent()
 
             ####################################################################
-            raw = [joystick.get_axis(i) for i in range(axes)]
-            raw[1] *= -1
-            raw[3] *= -1
-            rc = [str(round(raw[i] * 100)) for i in axis_order]
+            rc = [round(joystick.get_axis(i) * 100) for i in range(axes)]
+            rc[1] *= -1
+            rc[3] *= -1
             diffs = 0
-            for i in range(4):
+            for i in range(axes):
                 if rc[i] != last_rc[i]:
                     diffs += 1
             if diffs:
-                send_command('rc ' + ' '.join(rc))
+                tello.send_command(f'rc {rc[0]} {rc[1]} {rc[3]} {rc[2]}')
             last_rc = rc
             ####################################################################
 
