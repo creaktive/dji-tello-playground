@@ -2,6 +2,7 @@ from djitellopy import Tello
 import cv2
 import pygame
 import numpy as np
+import socket
 import time
 
 # Speed of the drone
@@ -47,7 +48,7 @@ class FrontEnd(object):
 
         # Init Tello object that interacts with the Tello drone
         # 初始化与Tello交互的Tello对象
-        self.tello = Tello('192.168.178.42')
+        self.tello = Tello(socket.gethostbyname('tello'), 1)
 
         # Drone velocities between -100~100
         # 无人机各方向速度在-100~100之间
