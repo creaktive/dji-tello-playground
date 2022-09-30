@@ -11,7 +11,7 @@ S = 60
 # A low number also results in input lag, as input information is processed once per frame.
 # pygame窗口显示的帧数
 # 较低的帧数会导致输入延迟，因为一帧只会处理一次输入信息
-FPS = 120
+FPS = 20
 
 
 class FrontEnd(object):
@@ -47,7 +47,7 @@ class FrontEnd(object):
 
         # Init Tello object that interacts with the Tello drone
         # 初始化与Tello交互的Tello对象
-        self.tello = Tello()
+        self.tello = Tello('192.168.178.42')
 
         # Drone velocities between -100~100
         # 无人机各方向速度在-100~100之间
@@ -129,17 +129,17 @@ class FrontEnd(object):
         elif key == pygame.K_DOWN:  # set backward velocity
             self.for_back_velocity = -S
         elif key == pygame.K_LEFT:  # set left velocity
-            self.left_right_velocity = -S
+            self.yaw_velocity = -S
         elif key == pygame.K_RIGHT:  # set right velocity
-            self.left_right_velocity = S
+            self.yaw_velocity = S
         elif key == pygame.K_w:  # set up velocity
             self.up_down_velocity = S
         elif key == pygame.K_s:  # set down velocity
             self.up_down_velocity = -S
         elif key == pygame.K_a:  # set yaw counter clockwise velocity
-            self.yaw_velocity = -S
+            self.left_right_velocity = -S
         elif key == pygame.K_d:  # set yaw clockwise velocity
-            self.yaw_velocity = S
+            self.left_right_velocity = S
 
     def keyup(self, key):
         """ Update velocities based on key released
@@ -153,11 +153,11 @@ class FrontEnd(object):
         if key == pygame.K_UP or key == pygame.K_DOWN:  # set zero forward/backward velocity
             self.for_back_velocity = 0
         elif key == pygame.K_LEFT or key == pygame.K_RIGHT:  # set zero left/right velocity
-            self.left_right_velocity = 0
+            self.yaw_velocity = 0
         elif key == pygame.K_w or key == pygame.K_s:  # set zero up/down velocity
             self.up_down_velocity = 0
         elif key == pygame.K_a or key == pygame.K_d:  # set zero yaw velocity
-            self.yaw_velocity = 0
+            self.left_right_velocity = 0
         elif key == pygame.K_t:  # takeoff
             self.tello.takeoff()
             self.send_rc_control = True
