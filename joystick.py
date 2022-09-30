@@ -1,4 +1,5 @@
 import pygame
+import socket
 
 pygame.init()
 # This is a simple class that will help us print to the screen.
@@ -25,8 +26,21 @@ class TextPrint:
     def unindent(self):
         self.x -= 10
 
+def send_command(msg):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    tello_address = ('192.168.10.1', 8889)
+
+    msg = msg.encode(encoding='utf-8')
+    print(msg)
+    sock.sendto(msg, tello_address)
 
 def main():
+    ############################################################################
+    axis_order = [0, 1, 3, 2]
+    last_rc = ['0', '0', '0', '0']
+    send_command('command')
+    ############################################################################
+
     # Set the width and height of the screen (width, height), and name the window.
     screen = pygame.display.set_mode((500, 700))
     pygame.display.set_caption("Joystick example")
@@ -53,10 +67,16 @@ def main():
 
             if event.type == pygame.JOYBUTTONDOWN:
                 print("Joystick button pressed.")
+                print(event)
                 if event.button == 0:
-                    joystick = joysticks[event.instance_id]
-                    if joystick.rumble(0, 0.7, 500):
-                        print(f"Rumble effect played on joystick {event.instance_id}")
+                    send_command('takeoff')
+                    # joystick = joysticks[event.instance_id]
+                    # if joystick.rumble(0, 0.7, 500):
+                    #     print(f"Rumble effect played on joystick {event.instance_id}")
+                if event.button == 1:
+                    send_command('land')
+                elif event.button >= 6 and event.button <= 11:
+                    send_command('speed ' + str(10 + (event.button - 6) * 18))
 
             if event.type == pygame.JOYBUTTONUP:
                 print("Joystick button released.")
@@ -134,6 +154,20 @@ def main():
             text_print.unindent()
 
             text_print.unindent()
+
+            ####################################################################
+            raw = [joystick.get_axis(i) for i in range(axes)]
+            raw[1] *= -1
+            raw[3] *= -1
+            rc = [str(round(raw[i] * 100)) for i in axis_order]
+            diffs = 0
+            for i in range(4):
+                if rc[i] != last_rc[i]:
+                    diffs += 1
+            if diffs:
+                send_command('rc ' + ' '.join(rc))
+            last_rc = rc
+            ####################################################################
 
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
