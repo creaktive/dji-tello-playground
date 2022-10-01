@@ -10,6 +10,7 @@
 		"numbuttons",
 		"numhats",
 		"pygame",
+		"SIGKILL",
 		"streamoff",
 		"streamon",
 		"tello",

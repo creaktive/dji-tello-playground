@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
 from djitellopy import Tello
 import pygame
+import signal
 import socket
+import subprocess
 
 pygame.init()
 # This is a simple class that will help us print to the screen.
@@ -29,139 +32,151 @@ class TextPrint:
 
 def main():
     tello = Tello(socket.gethostbyname('tello'), 1)
-    tello.connect()
-    tello.set_speed(10)
-    tello.streamoff()
-    tello.streamon()
+    video = None
+    try:
+        tello.connect()
+        tello.set_speed(10)
+        tello.streamoff()
+        tello.streamon()
 
-    # Set the width and height of the screen (width, height), and name the window.
-    screen = pygame.display.set_mode((500, 700))
-    pygame.display.set_caption("Joystick example")
+        video = subprocess.Popen(['./video-receiver.sh'])
 
-    # Used to manage how fast the screen updates.
-    clock = pygame.time.Clock()
+        # Set the width and height of the screen (width, height), and name the window.
+        screen = pygame.display.set_mode((500, 700))
+        pygame.display.set_caption("Joystick example")
 
-    # Get ready to print.
-    text_print = TextPrint()
+        # Used to manage how fast the screen updates.
+        clock = pygame.time.Clock()
 
-    # This dict can be left as-is, since pygame will generate a
-    # pygame.JOYDEVICEADDED event for every joystick connected
-    # at the start of the program.
-    joysticks = {}
+        # Get ready to print.
+        text_print = TextPrint()
 
-    done = False
-    airborne = False
-    while not done:
-        # Event processing step.
-        # Possible joystick events: JOYAXISMOTION, JOYBALLMOTION, JOYBUTTONDOWN,
-        # JOYBUTTONUP, JOYHATMOTION, JOYDEVICEADDED, JOYDEVICEREMOVED
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True  # Flag that we are done so we exit this loop.
+        # This dict can be left as-is, since pygame will generate a
+        # pygame.JOYDEVICEADDED event for every joystick connected
+        # at the start of the program.
+        joysticks = {}
 
-            if event.type == pygame.JOYBUTTONDOWN:
-                print("Joystick button pressed.")
-                print(event)
-                if event.button == 0:
-                    tello.takeoff()
-                    airborne = True
-                if event.button == 1:
-                    tello.land()
-                    airborne = False
-                elif event.button >= 6 and event.button <= 11:
-                    tello.speed(10 + (event.button - 6) * 18)
+        done = False
+        airborne = False
+        while not done:
+            # Event processing step.
+            # Possible joystick events: JOYAXISMOTION, JOYBALLMOTION, JOYBUTTONDOWN,
+            # JOYBUTTONUP, JOYHATMOTION, JOYDEVICEADDED, JOYDEVICEREMOVED
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    done = True  # Flag that we are done so we exit this loop.
 
-            if event.type == pygame.JOYBUTTONUP:
-                print("Joystick button released.")
+                if event.type == pygame.JOYBUTTONDOWN:
+                    print("Joystick button pressed.")
+                    print(event)
+                    if event.button == 0:
+                        tello.takeoff()
+                        airborne = True
+                    if event.button == 1:
+                        tello.land()
+                        airborne = False
+                    elif event.button >= 6 and event.button <= 11:
+                        tello.set_speed(10 + (event.button - 6) * 18)
 
-            # Handle hotplugging
-            if event.type == pygame.JOYDEVICEADDED:
-                # This event will be generated when the program starts for every
-                # joystick, filling up the list without needing to create them manually.
-                joy = pygame.joystick.Joystick(event.device_index)
-                joysticks[joy.get_instance_id()] = joy
-                print(f"Joystick {joy.get_instance_id()} connencted")
+                if event.type == pygame.JOYBUTTONUP:
+                    print("Joystick button released.")
 
-            if event.type == pygame.JOYDEVICEREMOVED:
-                del joysticks[event.instance_id]
-                print(f"Joystick {event.instance_id} disconnected")
+                # Handle hot-plugging
+                if event.type == pygame.JOYDEVICEADDED:
+                    # This event will be generated when the program starts for every
+                    # joystick, filling up the list without needing to create them manually.
+                    joy = pygame.joystick.Joystick(event.device_index)
+                    joysticks[joy.get_instance_id()] = joy
+                    print(f"Joystick {joy.get_instance_id()} connected")
 
-        # Drawing step
-        # First, clear the screen to white. Don't put other drawing commands
-        # above this, or they will be erased with this command.
-        screen.fill((255, 255, 255))
-        text_print.reset()
+                if event.type == pygame.JOYDEVICEREMOVED:
+                    del joysticks[event.instance_id]
+                    print(f"Joystick {event.instance_id} disconnected")
 
-        # Get count of joysticks.
-        joystick_count = pygame.joystick.get_count()
+            # Drawing step
+            # First, clear the screen to white. Don't put other drawing commands
+            # above this, or they will be erased with this command.
+            screen.fill((255, 255, 255))
+            text_print.reset()
 
-        text_print.tprint(screen, f"Number of joysticks: {joystick_count}")
-        text_print.indent()
+            # Get count of joysticks.
+            joystick_count = pygame.joystick.get_count()
 
-        # For each joystick:
-        for joystick in joysticks.values():
-            jid = joystick.get_instance_id()
-
-            text_print.tprint(screen, f"Joystick {jid}")
+            text_print.tprint(screen, f"Number of joysticks: {joystick_count}")
             text_print.indent()
 
-            # Get the name from the OS for the controller/joystick.
-            name = joystick.get_name()
-            text_print.tprint(screen, f"Joystick name: {name}")
+            # For each joystick:
+            for joystick in joysticks.values():
+                jid = joystick.get_instance_id()
 
-            guid = joystick.get_guid()
-            text_print.tprint(screen, f"GUID: {guid}")
+                text_print.tprint(screen, f"Joystick {jid}")
+                text_print.indent()
 
-            power_level = joystick.get_power_level()
-            text_print.tprint(screen, f"Joystick's power level: {power_level}")
+                # Get the name from the OS for the controller/joystick.
+                name = joystick.get_name()
+                text_print.tprint(screen, f"Joystick name: {name}")
 
-            # Usually axis run in pairs, up/down for one, and left/right for
-            # the other. Triggers count as axes.
-            axes = joystick.get_numaxes()
-            text_print.tprint(screen, f"Number of axes: {axes}")
-            text_print.indent()
+                guid = joystick.get_guid()
+                text_print.tprint(screen, f"GUID: {guid}")
 
-            for i in range(axes):
-                axis = joystick.get_axis(i)
-                text_print.tprint(screen, f"Axis {i} value: {axis:>6.3f}")
-            text_print.unindent()
+                power_level = joystick.get_power_level()
+                text_print.tprint(screen, f"Joystick's power level: {power_level}")
 
-            buttons = joystick.get_numbuttons()
-            text_print.tprint(screen, f"Number of buttons: {buttons}")
-            text_print.indent()
+                # Usually axis run in pairs, up/down for one, and left/right for
+                # the other. Triggers count as axes.
+                axes = joystick.get_numaxes()
+                text_print.tprint(screen, f"Number of axes: {axes}")
+                text_print.indent()
 
-            for i in range(buttons):
-                button = joystick.get_button(i)
-                text_print.tprint(screen, f"Button {i:>2} value: {button}")
-            text_print.unindent()
+                for i in range(axes):
+                    axis = joystick.get_axis(i)
+                    text_print.tprint(screen, f"Axis {i} value: {axis:>6.3f}")
+                text_print.unindent()
 
-            hats = joystick.get_numhats()
-            text_print.tprint(screen, f"Number of hats: {hats}")
-            text_print.indent()
+                buttons = joystick.get_numbuttons()
+                text_print.tprint(screen, f"Number of buttons: {buttons}")
+                text_print.indent()
 
-            # Hat position. All or nothing for direction, not a float like
-            # get_axis(). Position is a tuple of int values (x, y).
-            for i in range(hats):
-                hat = joystick.get_hat(i)
-                text_print.tprint(screen, f"Hat {i} value: {str(hat)}")
-            text_print.unindent()
+                for i in range(buttons):
+                    button = joystick.get_button(i)
+                    text_print.tprint(screen, f"Button {i:>2} value: {button}")
+                text_print.unindent()
 
-            text_print.unindent()
+                hats = joystick.get_numhats()
+                text_print.tprint(screen, f"Number of hats: {hats}")
+                text_print.indent()
 
-            if airborne:
-                rc = [joystick.get_axis(i) for i in range(axes)]
-                rc[1] *= -1
-                rc[3] *= -1
-                rc = [round(rc[i] * 50) for i in range(axes)]
-                tello.send_rc_control(rc[0], rc[1], rc[3], rc[2])
+                # Hat position. All or nothing for direction, not a float like
+                # get_axis(). Position is a tuple of int values (x, y).
+                for i in range(hats):
+                    hat = joystick.get_hat(i)
+                    text_print.tprint(screen, f"Hat {i} value: {str(hat)}")
+                text_print.unindent()
 
-        # Go ahead and update the screen with what we've drawn.
-        pygame.display.flip()
+                text_print.unindent()
 
-        # Limit to 30 frames per second.
-        clock.tick(30)
+                if airborne:
+                    rc = [joystick.get_axis(i) for i in range(axes)]
+                    rc[1] *= -1
+                    rc[3] *= -1
+                    rc = [round(rc[i] * 50) for i in range(axes)]
+                    tello.send_rc_control(rc[0], rc[1], rc[3], rc[2])
 
-    tello.end()
+            # Go ahead and update the screen with what we've drawn.
+            pygame.display.flip()
+
+            # Limit to 30 frames per second.
+            clock.tick(30)
+
+    except BaseException as msg:
+        print(msg)
+
+    finally:
+        tello.end()
+
+        if video != None:
+            video.send_signal(signal.SIGKILL)
+            video.wait()
 
 if __name__ == "__main__":
     main()
