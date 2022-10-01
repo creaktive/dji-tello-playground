@@ -1,3 +1,4 @@
+from djitellopy import Tello
 import pygame
 import socket
 
@@ -26,25 +27,12 @@ class TextPrint:
     def unindent(self):
         self.x -= 10
 
-class Tello:
-    def __init__(self, address='192.168.10.1', port=8889):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.tello_address = (address, port)
-
-    def send_command(self, msg):
-        msg = msg.encode(encoding='ascii')
-        print(msg)
-        self.sock.sendto(msg, self.tello_address)
-
 def main():
-    ############################################################################
-    last_rc = [0, 0, 0, 0]
-    tello = Tello()
-    tello.send_command('command')
-    tello.send_command('speed 10')
-    tello.send_command('streamoff')
-    tello.send_command('streamon')
-    ############################################################################
+    tello = Tello(socket.gethostbyname('tello'), 1)
+    tello.connect()
+    tello.set_speed(10)
+    # tello.streamoff()
+    # tello.streamon()
 
     # Set the width and height of the screen (width, height), and name the window.
     screen = pygame.display.set_mode((500, 700))
@@ -62,6 +50,7 @@ def main():
     joysticks = {}
 
     done = False
+    airborne = False
     while not done:
         # Event processing step.
         # Possible joystick events: JOYAXISMOTION, JOYBALLMOTION, JOYBUTTONDOWN,
@@ -74,14 +63,13 @@ def main():
                 print("Joystick button pressed.")
                 print(event)
                 if event.button == 0:
-                    tello.send_command('takeoff')
-                    # joystick = joysticks[event.instance_id]
-                    # if joystick.rumble(0, 0.7, 500):
-                    #     print(f"Rumble effect played on joystick {event.instance_id}")
+                    tello.takeoff()
+                    airborne = True
                 if event.button == 1:
-                    tello.send_command('land')
+                    tello.land()
+                    airborne = False
                 elif event.button >= 6 and event.button <= 11:
-                    tello.send_command('speed ' + str(10 + (event.button - 6) * 18))
+                    tello.speed(10 + (event.button - 6) * 18)
 
             if event.type == pygame.JOYBUTTONUP:
                 print("Joystick button released.")
@@ -160,25 +148,19 @@ def main():
 
             text_print.unindent()
 
-            ####################################################################
             rc = [round(joystick.get_axis(i) * 100) for i in range(axes)]
             rc[1] *= -1
             rc[3] *= -1
-            diffs = 0
-            for i in range(axes):
-                if rc[i] != last_rc[i]:
-                    diffs += 1
-            if diffs:
-                tello.send_command(f'rc {rc[0]} {rc[1]} {rc[3]} {rc[2]}')
-            last_rc = rc
-            ####################################################################
+            if airborne:
+                tello.send_rc_control(rc[0], rc[1], rc[3], rc[2])
 
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
 
-        # Limit to 30 frames per second.
-        clock.tick(30)
+        # Limit to 20 frames per second.
+        clock.tick(20)
 
+    tello.end()
 
 if __name__ == "__main__":
     main()
