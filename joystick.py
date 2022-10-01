@@ -31,8 +31,8 @@ def main():
     tello = Tello(socket.gethostbyname('tello'), 1)
     tello.connect()
     tello.set_speed(10)
-    # tello.streamoff()
-    # tello.streamon()
+    tello.streamoff()
+    tello.streamon()
 
     # Set the width and height of the screen (width, height), and name the window.
     screen = pygame.display.set_mode((500, 700))
@@ -152,14 +152,14 @@ def main():
                 rc = [joystick.get_axis(i) for i in range(axes)]
                 rc[1] *= -1
                 rc[3] *= -1
-                rc = [round(rc[i] * 100) for i in range(axes)]
+                rc = [round(rc[i] * 66) for i in range(axes)]
                 tello.send_rc_control(rc[0], rc[1], rc[3], rc[2])
 
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
 
-        # Limit to 20 frames per second.
-        clock.tick(20)
+        # Limit to 30 frames per second.
+        clock.tick(30)
 
     tello.end()
 
