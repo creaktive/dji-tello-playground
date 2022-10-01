@@ -152,7 +152,7 @@ def main():
                 rc = [joystick.get_axis(i) for i in range(axes)]
                 rc[1] *= -1
                 rc[3] *= -1
-                rc = [round(rc[i] * 66) for i in range(axes)]
+                rc = [round(rc[i] * 50) for i in range(axes)]
                 tello.send_rc_control(rc[0], rc[1], rc[3], rc[2])
 
         # Go ahead and update the screen with what we've drawn.
