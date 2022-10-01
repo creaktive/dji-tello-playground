@@ -1,0 +1,18 @@
+{
+	"cSpell.words": [
+		"blit",
+		"djitellopy",
+		"JOYBUTTONDOWN",
+		"JOYBUTTONUP",
+		"JOYDEVICEADDED",
+		"JOYDEVICEREMOVED",
+		"numaxes",
+		"numbuttons",
+		"numhats",
+		"pygame",
+		"streamoff",
+		"streamon",
+		"tello",
+		"tprint"
+	]
+}
