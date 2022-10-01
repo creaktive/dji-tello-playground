@@ -148,10 +148,11 @@ def main():
 
             text_print.unindent()
 
-            rc = [round(joystick.get_axis(i) * 100) for i in range(axes)]
-            rc[1] *= -1
-            rc[3] *= -1
             if airborne:
+                rc = [joystick.get_axis(i) for i in range(axes)]
+                rc[1] *= -1
+                rc[3] *= -1
+                rc = [round(rc[i] * 100) for i in range(axes)]
                 tello.send_rc_control(rc[0], rc[1], rc[3], rc[2])
 
         # Go ahead and update the screen with what we've drawn.
