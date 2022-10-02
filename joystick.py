@@ -59,6 +59,8 @@ def main():
 
         done = False
         airborne = False
+        trimming = False
+        trim = [0, 0, 0, 0]
         while not done:
             # Event processing step.
             # Possible joystick events: JOYAXISMOTION, JOYBALLMOTION, JOYBUTTONDOWN,
@@ -70,10 +72,12 @@ def main():
                 if event.type == pygame.JOYBUTTONDOWN:
                     print("Joystick button pressed.")
                     print(event)
-                    if event.button == 0:
+                    if airborne and event.button == 0:
+                        trimming = True
+                    elif not airborne and event.button == 5:
                         tello.takeoff()
                         airborne = True
-                    if event.button == 1:
+                    elif airborne and event.button == 3:
                         tello.land()
                         airborne = False
                     elif airborne and event.button == 4:
@@ -85,6 +89,8 @@ def main():
 
                 if event.type == pygame.JOYBUTTONUP:
                     print("Joystick button released.")
+                    if event.button == 0:
+                        trimming = False
 
                 # Handle hot-plugging
                 if event.type == pygame.JOYDEVICEADDED:
@@ -164,7 +170,9 @@ def main():
                     rc = [joystick.get_axis(i) for i in range(axes)]
                     rc[1] *= -1
                     rc[3] *= -1
-                    rc = [round(rc[i] * 50) for i in range(axes)]
+                    if trimming:
+                        trim = rc
+                    rc = [round(pow(rc[i] - trim[i], 3) * 100) for i in range(axes)]
                     tello.send_rc_control(rc[0], rc[1], rc[3], rc[2])
 
             # Go ahead and update the screen with what we've drawn.
