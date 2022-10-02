@@ -104,6 +104,18 @@ def main():
                     del joysticks[event.instance_id]
                     print(f"Joystick {event.instance_id} disconnected")
 
+                if event.type == pygame.JOYHATMOTION:
+                    print("Joystick hat motion.")
+                    print(event)
+                    if airborne and event.value[0] == -1:
+                        tello.flip_left()
+                    elif airborne and event.value[0] == 1:
+                        tello.flip_right()
+                    elif airborne and event.value[1] == -1:
+                        tello.flip_back()
+                    elif airborne and event.value[1] == 1:
+                        tello.flip_forward()
+
             # Drawing step
             # First, clear the screen to white. Don't put other drawing commands
             # above this, or they will be erased with this command.

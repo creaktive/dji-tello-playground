@@ -2,10 +2,13 @@
 	"cSpell.words": [
 		"blit",
 		"djitellopy",
+		"JOYAXISMOTION",
+		"JOYBALLMOTION",
 		"JOYBUTTONDOWN",
 		"JOYBUTTONUP",
 		"JOYDEVICEADDED",
 		"JOYDEVICEREMOVED",
+		"JOYHATMOTION",
 		"numaxes",
 		"numbuttons",
 		"numhats",
