@@ -197,11 +197,11 @@ def main():
         print(msg)
 
     finally:
-        tello.end()
-
         if video != None:
             video.send_signal(signal.SIGKILL)
             video.wait()
+
+        tello.end()
 
 if __name__ == "__main__":
     main()
