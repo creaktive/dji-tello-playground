@@ -33,9 +33,10 @@ class TextPrint:
 def main():
     tello = Tello(socket.gethostbyname('tello'), 1)
     video = None
+    speed = 10
     try:
         tello.connect()
-        tello.set_speed(10)
+        tello.set_speed(speed)
         tello.streamoff()
         tello.streamon()
 
@@ -75,8 +76,12 @@ def main():
                     if event.button == 1:
                         tello.land()
                         airborne = False
-                    elif event.button >= 6 and event.button <= 11:
-                        tello.set_speed(10 + (event.button - 6) * 18)
+                    elif airborne and event.button == 4:
+                        speed = min(speed + 30, 100)
+                        tello.set_speed(speed)
+                    elif airborne and event.button == 2:
+                        speed = max(speed - 30, 10)
+                        tello.set_speed(speed)
 
                 if event.type == pygame.JOYBUTTONUP:
                     print("Joystick button released.")
