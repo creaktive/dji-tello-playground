@@ -74,6 +74,8 @@ def main():
                     print(event)
                     if airborne and event.button == 0:
                         trimming = True
+                    elif event.button == 1:
+                        trim = [0, 0, 0, 0]
                     elif not airborne and event.button == 5:
                         tello.takeoff()
                         airborne = True
