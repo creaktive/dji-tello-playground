@@ -60,7 +60,8 @@ def main():
         done = False
         airborne = False
         trimming = False
-        trim = [0, 0, 0, 0]
+        rc = [0, 0, 0, 0]
+        trim = rc
         while not done:
             # Event processing step.
             # Possible joystick events: JOYAXISMOTION, JOYBALLMOTION, JOYBUTTONDOWN,
@@ -127,7 +128,8 @@ def main():
             # Get count of joysticks.
             joystick_count = pygame.joystick.get_count()
 
-            text_print.tprint(screen, f"Number of joysticks: {joystick_count}")
+            text_print.tprint(screen, f"control axis: {rc}")
+            text_print.tprint(screen, f"battery: {tello.get_battery()}")
             text_print.indent()
 
             # For each joystick:
